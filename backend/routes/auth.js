@@ -6,6 +6,8 @@ const { apiLimiter } = require('../middleware/rateLimit');
 
 router.post('/signup', apiLimiter, authController.signup);
 router.post('/login', apiLimiter, authController.login);
+router.post('/forgot-password', apiLimiter, authController.forgotPassword);
+router.post('/reset-password', apiLimiter, authController.resetPassword);
 router.get('/me', authMiddleware, authController.getProfile);
 
 module.exports = router;

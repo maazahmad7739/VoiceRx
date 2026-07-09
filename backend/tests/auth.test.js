@@ -158,4 +158,66 @@ describe('Auth Controller Edge Cases', () => {
       expect(res.body.error).toBe('Access denied. No token provided.');
     });
   });
+
+  describe('Password Reset Flow', () => {
+    let demoToken = '';
+
+    it('should generate a password reset token for valid email', async () => {
+      const res = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: testDoctor.email });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('demoToken');
+      expect(res.body.message).toContain('generated successfully');
+      demoToken = res.body.demoToken;
+    });
+
+    it('should fail to generate token for unregistered email', async () => {
+      const res = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: 'notregistered@example.com' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('A doctor with this email could not be found.');
+    });
+
+    it('should fail to reset password with incorrect token', async () => {
+      const res = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email: testDoctor.email,
+          token: '000000', // Wrong token
+          newPassword: 'newsecretpassword123'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Invalid reset token.');
+    });
+
+    it('should successfully reset password with valid token', async () => {
+      const res = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email: testDoctor.email,
+          token: demoToken,
+          newPassword: 'newsecretpassword123'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Password has been reset successfully.');
+    });
+
+    it('should authenticate doctor with the new password', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: testDoctor.email,
+          password: 'newsecretpassword123'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('token');
+    });
+  });
 });
