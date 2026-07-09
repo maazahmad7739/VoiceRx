@@ -9,5 +9,6 @@ router.post('/login', apiLimiter, authController.login);
 router.post('/forgot-password', apiLimiter, authController.forgotPassword);
 router.post('/reset-password', apiLimiter, authController.resetPassword);
 router.get('/me', authMiddleware, authController.getProfile);
+router.get('/demo-accounts', apiLimiter, authController.getDemoAccounts);
 
 module.exports = router;

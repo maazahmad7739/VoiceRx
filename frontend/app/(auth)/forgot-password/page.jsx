@@ -28,6 +28,7 @@ function ForgotPasswordForm() {
   const [step, setStep] = useState(1); // 1: Request Token, 2: Reset Password, 3: Success
   const [email, setEmail] = useState(emailParam);
   const [demoToken, setDemoToken] = useState('');
+  const [demoEmails, setDemoEmails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [apiSuccess, setApiSuccess] = useState('');
@@ -48,6 +49,21 @@ function ForgotPasswordForm() {
       setEmail(emailParam);
     }
   }, [emailParam, setValue]);
+
+  // Fetch registered demo accounts from database
+  useEffect(() => {
+    const fetchDemoAccounts = async () => {
+      try {
+        const response = await api.get('/auth/demo-accounts');
+        if (response && response.emails) {
+          setDemoEmails(response.emails);
+        }
+      } catch (err) {
+        console.error('Failed to load demo accounts:', err.message);
+      }
+    };
+    fetchDemoAccounts();
+  }, []);
 
   const newPasswordVal = watch('password');
 
@@ -147,6 +163,30 @@ function ForgotPasswordForm() {
               )}
             </div>
 
+            {/* Demo Helper box */}
+            {demoEmails.length > 0 && (
+              <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                  Demo Helper: Registered Accounts in Database
+                </p>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                  {demoEmails.map((emailItem) => (
+                    <button
+                      key={emailItem}
+                      type="button"
+                      onClick={() => {
+                        setValue('email', emailItem);
+                        setEmail(emailItem);
+                      }}
+                      className="text-[11px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50/10 text-slate-600 dark:text-slate-300 rounded-lg px-2 py-1 transition-all truncate max-w-full"
+                    >
+                      {emailItem}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -184,7 +224,7 @@ function ForgotPasswordForm() {
                 <div>
                   <p>{apiSuccess}</p>
                   {demoToken && (
-                    <p className="mt-1 text-[11px] text-blue-600 dark:text-blue-400 font-mono bg-blue-500/10 p-1.5 rounded-lg border border-blue-500/25">
+                    <p className="mt-1 text-[11px] text-blue-600 dark:text-blue-400 font-mono bg-blue-500/10 p-1.5 rounded-lg border border-blue-500/25 animate-pulse">
                       <strong>Demo Reset Code:</strong> {demoToken}
                     </p>
                   )}

@@ -213,3 +213,17 @@ exports.resetPassword = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error during password reset.' });
   }
 };
+
+exports.getDemoAccounts = async (req, res) => {
+  try {
+    const doctors = await prisma.doctor.findMany({
+      select: { email: true },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+    return res.status(200).json({ emails: doctors.map(d => d.email) });
+  } catch (error) {
+    console.error('Get demo accounts error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+};
