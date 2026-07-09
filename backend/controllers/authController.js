@@ -159,8 +159,10 @@ exports.forgotPassword = async (req, res) => {
 
     console.log('\x1b[36m%s\x1b[0m', `[PASSWORD RESET TOKEN] For ${email}: ${resetToken}`);
 
-    // Trigger email send
-    await sendResetEmail(email, resetToken);
+    // Trigger email send in the background to prevent SMTP connection blocks or timeouts from hanging the API
+    sendResetEmail(email, resetToken).catch(err => {
+      console.error('[EMAIL ERROR] Background email transmission failed:', err.message);
+    });
 
     return res.status(200).json({
       message: 'Password reset token generated successfully.',
