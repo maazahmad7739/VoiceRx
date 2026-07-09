@@ -41,10 +41,10 @@ async function getTransporter() {
   }
 }
 
-exports.sendResetEmail = async (email, token) => {
+exports.sendResetEmail = async (email, otp) => {
   const activeTransporter = await getTransporter();
   if (!activeTransporter) {
-    console.warn(`[EMAIL] Transporter unavailable. Intercepted reset code for ${email}: ${token}`);
+    console.warn(`[EMAIL] Transporter unavailable. Intercepted reset code for ${email}: ${otp}`);
     return null;
   }
 
@@ -67,11 +67,11 @@ exports.sendResetEmail = async (email, token) => {
         </p>
         <div style="background-color: #f1f5f9; border-radius: 12px; padding: 15px; text-align: center; margin: 25px 0; border: 1px solid #e2e8f0;">
           <span style="font-size: 28px; font-weight: 800; letter-spacing: 6px; color: #059669; font-family: monospace; display: block;">
-            ${token}
+            ${otp}
           </span>
         </div>
         <p style="font-size: 12px; color: #64748b; text-align: center; margin-bottom: 0; line-height: 1.4;">
-          This verification code will expire in 1 hour. <br/>
+          This verification code will expire in 10 minutes. <br/>
           If you did not request this password change, please ignore this email.
         </p>
       </div>

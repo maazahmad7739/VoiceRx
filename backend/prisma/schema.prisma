@@ -15,13 +15,12 @@ model Doctor {
   specialization  String
   clinicName      String     @map("clinic_name")
   phone           String
-  resetToken      String?    @map("reset_token")
-  resetTokenExpiry DateTime?  @map("reset_token_expiry")
   createdAt       DateTime   @default(now()) @map("created_at")
   patients        Patient[]
   soapNotes       SOAPNote[]
   prescriptions   Prescription[]
   secondOpinions  SecondOpinion[]
+  resetOtps       PasswordResetOtp[]
 
   @@map("doctors")
 }
@@ -110,4 +109,17 @@ model SecondOpinion {
   patient                 Patient? @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   @@map("second_opinions")
+}
+
+model PasswordResetOtp {
+  id        String   @id @default(uuid())
+  doctorId  String   @map("doctor_id")
+  otpHash   String   @map("otp_hash")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_otps")
 }

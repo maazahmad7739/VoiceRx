@@ -159,53 +159,91 @@ describe('Auth Controller Edge Cases', () => {
     });
   });
 
-  describe('Password Reset Flow', () => {
-    let demoToken = '';
+  describe('Password Reset Flow via OTP', () => {
+    let demoOtp = '';
+    let resetToken = '';
 
-    it('should generate a password reset token for valid email', async () => {
+    it('should return generic success message when requesting OTP for valid email', async () => {
       const res = await request(app)
         .post('/api/auth/forgot-password')
         .send({ email: testDoctor.email });
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('demoToken');
-      expect(res.body.message).toContain('generated successfully');
-      demoToken = res.body.demoToken;
+      expect(res.body).toHaveProperty('demoOtp');
+      expect(res.body.message).toContain('If this email exists');
+      demoOtp = res.body.demoOtp;
     });
 
-    it('should fail to generate token for unregistered email', async () => {
+    it('should return identical generic success message for unregistered email', async () => {
       const res = await request(app)
         .post('/api/auth/forgot-password')
         .send({ email: 'notregistered@example.com' });
 
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('A doctor with this email could not be found.');
+      expect(res.status).toBe(200);
+      expect(res.body.message).toContain('If this email exists');
+      expect(res.body).not.toHaveProperty('demoOtp'); // Unregistered shouldn't leak OTP
     });
 
-    it('should fail to reset password with incorrect token', async () => {
+    it('should fail to verify with incorrect OTP', async () => {
+      const res = await request(app)
+        .post('/api/auth/verify-otp')
+        .send({
+          email: testDoctor.email,
+          otp: '000000' // Wrong OTP
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Invalid email or OTP.');
+    });
+
+    it('should successfully verify correct OTP and return a reset token', async () => {
+      const res = await request(app)
+        .post('/api/auth/verify-otp')
+        .send({
+          email: testDoctor.email,
+          otp: demoOtp
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('resetToken');
+      expect(res.body.message).toContain('verified successfully');
+      resetToken = res.body.resetToken;
+    });
+
+    it('should fail to reset password with an invalid reset token', async () => {
       const res = await request(app)
         .post('/api/auth/reset-password')
         .send({
-          email: testDoctor.email,
-          token: '000000', // Wrong token
+          resetToken: 'invalid.jwt.token',
           newPassword: 'newsecretpassword123'
         });
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe('Invalid reset token.');
+      expect(res.body.error).toContain('Invalid or expired reset session token.');
     });
 
-    it('should successfully reset password with valid token', async () => {
+    it('should successfully reset password with valid reset token', async () => {
       const res = await request(app)
         .post('/api/auth/reset-password')
         .send({
-          email: testDoctor.email,
-          token: demoToken,
+          resetToken,
           newPassword: 'newsecretpassword123'
         });
 
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Password has been reset successfully.');
+    });
+
+    it('should fail to reset password again using the same reset token', async () => {
+      const res = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          resetToken,
+          newPassword: 'anothernewpassword123'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('Reset session has already been used or is invalid.');
     });
 
     it('should authenticate doctor with the new password', async () => {
