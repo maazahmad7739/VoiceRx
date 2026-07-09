@@ -1,29 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '../../../utils/api';
 import { Activity, Mail, Lock, Key, ArrowRight, ArrowLeft, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full max-w-md flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mb-2" />
+        <p className="text-sm text-slate-500">Loading recovery portal...</p>
+      </div>
+    }>
+      <ForgotPasswordForm />
+    </Suspense>
+  );
+}
+
+function ForgotPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const emailParam = searchParams.get('email') || '';
+
   const [step, setStep] = useState(1); // 1: Request Token, 2: Reset Password, 3: Success
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailParam);
   const [demoToken, setDemoToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [apiSuccess, setApiSuccess] = useState('');
 
   // Form hooks
-  const { register: requestRegister, handleSubmit: handleRequestSubmit, formState: { errors: requestErrors } } = useForm({
-    defaultValues: { email: '' }
+  const { register: requestRegister, handleSubmit: handleRequestSubmit, setValue, formState: { errors: requestErrors } } = useForm({
+    defaultValues: { email: emailParam }
   });
 
   const { register: resetRegister, handleSubmit: handleResetSubmit, watch, formState: { errors: resetErrors } } = useForm({
     defaultValues: { token: '', password: '', confirmPassword: '' }
   });
+
+  // Sync email default value if parameter changes client-side
+  useEffect(() => {
+    if (emailParam) {
+      setValue('email', emailParam);
+      setEmail(emailParam);
+    }
+  }, [emailParam, setValue]);
 
   const newPasswordVal = watch('password');
 

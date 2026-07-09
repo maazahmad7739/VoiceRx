@@ -14,12 +14,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
       password: ''
     }
   });
+
+  const emailValue = watch('email') || '';
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -110,7 +112,7 @@ export default function LoginPage() {
             )}
             <div className="flex justify-end pt-1">
               <Link 
-                href="/forgot-password" 
+                href={`/forgot-password?email=${encodeURIComponent(emailValue)}`}
                 className="text-xs text-emerald-500 hover:underline font-semibold"
               >
                 Forgot Password?
