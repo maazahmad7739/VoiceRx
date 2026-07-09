@@ -219,16 +219,22 @@ function ForgotPasswordForm() {
           <form onSubmit={handleResetSubmit(onResetSubmit)} className="space-y-6">
             
             {apiSuccess && (
-              <div className="flex items-start gap-2.5 p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-xl text-xs font-semibold leading-relaxed">
-                <CheckCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
-                <div>
-                  <p>{apiSuccess}</p>
-                  {demoToken && (
-                    <p className="mt-1 text-[11px] text-blue-600 dark:text-blue-400 font-mono bg-blue-500/10 p-1.5 rounded-lg border border-blue-500/25 animate-pulse">
-                      <strong>Demo Reset Code:</strong> {demoToken}
-                    </p>
-                  )}
+              <div className="flex flex-col gap-2 p-4 bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 rounded-2xl text-xs leading-relaxed">
+                <div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-400">
+                  <AlertCircle className="h-5 w-5 shrink-0" />
+                  <span>DEVELOPMENT MODE: NO EMAIL SERVER CONNECTED</span>
                 </div>
+                <p className="text-slate-650 dark:text-slate-350">
+                  Because this is a demo environment with no active SMTP mail server, your reset code has been intercepted and displayed below:
+                </p>
+                {demoToken && (
+                  <div className="mt-1.5 flex items-center justify-between bg-white dark:bg-slate-900 border-2 border-dashed border-amber-500/50 p-3 rounded-xl">
+                    <span className="font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">Interupted Reset Code:</span>
+                    <span className="text-xl font-mono font-extrabold text-amber-600 dark:text-amber-400 tracking-widest bg-amber-500/20 px-3 py-1 rounded-lg animate-pulse">
+                      {demoToken}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
