@@ -1,0 +1,111 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Doctor {
+  id              String     @id @default(uuid())
+  name            String
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  specialization  String
+  clinicName      String     @map("clinic_name")
+  phone           String
+  createdAt       DateTime   @default(now()) @map("created_at")
+  patients        Patient[]
+  soapNotes       SOAPNote[]
+  prescriptions   Prescription[]
+  secondOpinions  SecondOpinion[]
+
+  @@map("doctors")
+}
+
+model Patient {
+  id        String     @id @default(uuid())
+  doctorId  String     @map("doctor_id")
+  name      String
+  age       Int
+  gender    String
+  phone     String
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  doctor    Doctor     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  soapNotes SOAPNote[]
+  prescriptions Prescription[]
+  secondOpinions SecondOpinion[]
+
+  @@map("patients")
+}
+
+model SOAPNote {
+  id                    String    @id @default(uuid())
+  doctorId              String    @map("doctor_id")
+  patientId             String    @map("patient_id")
+  transcript            String
+  subjective            String
+  objective             String
+  assessment            String
+  plan                  String
+  patientSummaryEnglish String    @map("patient_summary_english")
+  patientSummaryHindi   String    @map("patient_summary_hindi")
+  icdCode               String?   @map("icd_code")
+  severity              String    @default("mild") // mild, moderate, severe, critical
+  medications           String    @default("[]")
+  flags                 String    @default("[]")
+  audioUrl              String?   @map("audio_url")
+  followUpDate          DateTime? @map("follow_up_date")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  doctor                Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient               Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  prescriptions         Prescription[]
+
+  @@map("soap_notes")
+}
+
+model Prescription {
+  id                  String     @id @default(uuid())
+  doctorId            String     @map("doctor_id")
+  patientId           String     @map("patient_id")
+  soapNoteId          String?    @map("soap_note_id")
+  medicines           String     @default("[]") // stored as JSON string
+  diagnosis           String?    @map("diagnosis")
+  specialInstructions String?    @map("special_instructions")
+  followUpDate        DateTime?  @map("follow_up_date")
+  voiceInputText      String?    @map("voice_input_text")
+  createdAt           DateTime   @default(now()) @map("created_at")
+
+  doctor              Doctor     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient             Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  soapNote            SOAPNote?  @relation(fields: [soapNoteId], references: [id], onDelete: SetNull)
+
+  @@map("prescriptions")
+}
+
+model SecondOpinion {
+  id                      String   @id @default(uuid())
+  doctorId                String   @map("doctor_id")
+  patientId               String?  @map("patient_id")
+  caseInput               String   @map("case_input")
+  specificQuestion        String   @map("specific_question")
+  patientAge              Int?     @map("patient_age")
+  patientGender           String?  @map("patient_gender")
+  comorbidities           String   @default("[]") // stores JSON list
+  currentMedications      String   @default("[]") // stores JSON list
+  directAnswer            String   @map("direct_answer")
+  guidelinesApplied      String   @default("[]") // stores JSON list
+  whatGuidelinesSuggest   String   @default("{}") // stores JSON object
+  indiaContext            String   @default("{}") // stores JSON object
+  evidenceStrength        String   @map("evidence_strength")
+  geminiFullResponse      String   @map("gemini_full_response") // JSON response stored as string
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  doctor                  Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient                 Patient? @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@map("second_opinions")
+}

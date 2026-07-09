@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+jspdf/
+
+# Next.js build
+.next/
+out/
+
+# Database files & directories
+postgres_data/
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+
+# Environment secrets
+.env
+.env.local
+backend/.env
+
+# Temporary upload directories
+backend/uploads/
+
+# System files
+.DS_Store
+Thumbs.db

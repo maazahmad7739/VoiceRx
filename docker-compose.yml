@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: voicerx-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: voicerx
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - voicerx-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: voicerx-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - voicerx-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: voicerx-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/voicerx?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=voicerx_jwt_secret_key_change_me_in_production
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CLOUDINARY_URL=${CLOUDINARY_URL}
+    depends_on:
+      - db
+      - redis
+    command: sh -c "npx prisma db push && npm run dev"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - voicerx-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: voicerx-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/.next
+      - /app/node_modules
+    networks:
+      - voicerx-network
+
+networks:
+  voicerx-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local

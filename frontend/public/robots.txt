@@ -1,0 +1,18 @@
+# Host
+Host: https://voicerx.in
+
+# Sitemaps
+Sitemap: https://voicerx.in/sitemap.xml
+
+User-agent: *
+# Public pages are allowed to be crawled
+Allow: /
+Allow: /login
+Allow: /signup
+
+# Disallow crawling private doctor panels and patient information for security and privacy
+Disallow: /dashboard
+Disallow: /record
+Disallow: /prescription
+Disallow: /second-opinion
+Disallow: /history
